@@ -42,3 +42,12 @@ impl Config {
         Ok(Config{file_path:file_path})
     }
 }
+
+pub fn error (line:i32, message: &str) -> () {
+   report(line, "", message);
+   process::exit(1);
+}
+
+fn report (line:i32, where_at:&str, message:&str) -> () {
+    eprintln!("[Line {line} ] Error {where_at} : {message}");
+}
