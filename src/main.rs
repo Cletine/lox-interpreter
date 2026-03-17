@@ -33,7 +33,7 @@ fn get_char_list(sc: &mut ScannerStr<'_>) -> Vec<Option <char>> {
             if ch == None {
                 break;
             }
-            v.push(sc.next_char().unwrap());
+            v.push(ch);
         }
     return v
 }
