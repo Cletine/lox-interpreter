@@ -19,14 +19,31 @@ fn main() {
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let mut contents = fs::read_to_string(config.file_path)?;
     let mut scanner = ScannerStr::new(&contents);
+    let mut source = get_char_list(&mut scanner);
 
-    for token in scanner {
-       println!("{token}"); 
-    }
+    debug_print(&source);
 
     Ok(())
 }
 
+fn get_char_list(sc: &mut ScannerStr<'_>) -> Vec<Option <char>> {
+    let mut v = Vec::new();
+        loop {
+            let ch = sc.next_char().unwrap();
+            if ch == None {
+                break;
+            }
+            v.push(sc.next_char().unwrap());
+        }
+    return v
+}
+
+
+fn debug_print(source : &Vec<Option <char>>) -> () {   
+    for token in source { 
+        println!("{:?}", token); 
+    } 
+}
 struct Config {
     pub file_path: String,
 }
