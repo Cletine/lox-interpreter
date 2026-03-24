@@ -1,0 +1,37 @@
+use crate::lox_scanner::Object;
+
+#[derive (Debug, PartialEq)]
+pub enum TokenType {
+  // Single-character tokens.
+  LeftParen, RightParen, LeftBrace, RightBrace,
+  Comma, Dot, Minus, Plus, SemiColon, Slash, Star,
+
+  // One or two character tokens.
+  Bang, BangEqual,
+  Equal, EqualEqual,
+  Greater, GreaterEqual,
+  Less, LessEqual,
+  // Literals.
+  IDENTIFIER, STRING, NUMBER,
+
+  // Keywords.
+  AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
+  PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE,
+
+  EOF
+}
+
+
+#[derive (Debug, PartialEq)]
+pub struct Token {
+    pub token_type: TokenType,
+    pub lexeme: String,
+    pub literal: Object,
+    pub line: usize,
+}
+
+impl Token { 
+    pub fn toString(&self) -> &'static str{
+        "{self.type} {self.lexeme} {self.literal}"
+    } 
+}

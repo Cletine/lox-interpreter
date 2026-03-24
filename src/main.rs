@@ -17,9 +17,9 @@ fn main() {
 }
 
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    let mut contents = fs::read_to_string(config.file_path)?;
+    let contents = fs::read_to_string(config.file_path)?;
     let mut scanner = ScannerStr::new(&contents);
-    let mut source = get_char_list(&mut scanner);
+    let source = get_char_list(&mut scanner);
 
     debug_print(&source);
 
@@ -60,11 +60,4 @@ impl Config {
     }
 }
 
-pub fn error (line:i32, message: &str) -> () {
-   report(line, "", message);
-   process::exit(1);
-}
 
-fn report (line:i32, where_at:&str, message:&str) -> () {
-    eprintln!("[Line {line} ] Error {where_at} : {message}");
-}
