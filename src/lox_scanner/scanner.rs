@@ -34,6 +34,7 @@ impl LoxScanner <'_> {
     fn scanToken(&mut self) -> () {
         let c : &char = self.advance();
         match c {
+            '(' => self.addToken(TokenType::LeftParen),
             ')' => self.addToken(TokenType::RightParen),
             '{' => self.addToken(TokenType::LeftBrace),
             '}' => self.addToken(TokenType::RightBrace),
@@ -62,7 +63,7 @@ impl LoxScanner <'_> {
             '/' => { 
                 if self.match_next('/') {
                     while *self.peek() != '\n' && !self.isAtEnd() {
-                        self.current += 1;
+                        self.advance();
                     }
                 }
                 else {
