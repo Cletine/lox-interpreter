@@ -1,6 +1,6 @@
 use crate::lox_scanner::Object;
 
-#[derive (Debug, PartialEq)]
+#[derive (Debug, PartialEq, Clone)]
 pub enum TokenType {
   // Single-character tokens.
   LeftParen, RightParen, LeftBrace, RightBrace,
@@ -22,7 +22,7 @@ pub enum TokenType {
 }
 
 
-#[derive (Debug, PartialEq)]
+#[derive (Debug, PartialEq, Clone)]
 pub struct Token {
     pub token_type: TokenType,
     pub lexeme: String,
