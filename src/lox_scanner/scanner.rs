@@ -1,12 +1,36 @@
 use crate::lox_scanner::Token;
 use crate::lox_scanner::TokenType;
 use crate::lox_scanner::Object;
+use std::collections::HashMap;
+use lazy_static::lazy_static;
 use crate::error;
 
 
+lazy_static! {
+    static ref KEYWORDS: HashMap<&'static str, TokenType> = {
+        let mut m = HashMap::new();
+        m.insert("and",TokenType::AND);
+        m.insert("class",TokenType::CLASS);
+        m.insert("else",TokenType::ELSE);
+        m.insert("if",TokenType::IF);
+        m.insert("nil",TokenType::NIL);
+        m.insert("or",TokenType::OR);
+        m.insert("print",TokenType::PRINT);
+        m.insert("return",TokenType::RETURN);
+        m.insert("super",TokenType::SUPER);
+        m.insert("this",TokenType::THIS);
+        m.insert("true",TokenType::TRUE);
+        m.insert("var",TokenType::VAR);
+        m.insert("fun",TokenType::FUN);
+        m.insert("for",TokenType::FOR);
+        m.insert("false",TokenType::FALSE);
+        m.insert("while",TokenType::WHILE);
+        m
+    };
+}
 
-pub struct LoxScanner<'a> {
-    pub source: Vec<Option <&'a char>>,
+pub struct LoxScanner {
+    pub source:String, 
     pub Tokens: Vec<Token>,
     pub start: usize,
     pub current: usize,
@@ -14,7 +38,7 @@ pub struct LoxScanner<'a> {
 }
 
 
-impl LoxScanner <'_> {
+impl LoxScanner { 
     pub fn scanTokens(&mut self) {
         while !(self.isAtEnd()) {
             self.start = self.current;
@@ -27,14 +51,13 @@ impl LoxScanner <'_> {
                 lexeme: "".to_string(),
                 literal: Object::NULL,
                 line: self.line,
-                });
-        
+            });
+
     }
 
     fn scanToken(&mut self) -> () {
-        let c : &char = self.advance();
-        match c {
-            '(' => self.addToken(TokenType::LeftParen),
+        let c : char = self.advance();
+        match c { '(' => self.addToken(TokenType::LeftParen),
             ')' => self.addToken(TokenType::RightParen),
             '{' => self.addToken(TokenType::LeftBrace),
             '}' => self.addToken(TokenType::RightBrace),
@@ -62,7 +85,7 @@ impl LoxScanner <'_> {
             }
             '/' => { 
                 if self.match_next('/') {
-                    while *self.peek() != '\n' && !self.isAtEnd() {
+                    while self.peek() != '\n' && !self.isAtEnd() {
                         self.advance();
                     }
                 }
@@ -77,16 +100,23 @@ impl LoxScanner <'_> {
             '\n'=> self.line += 1,
             '"' => self.string(),
             _ => {
-                if c.is_digit(10){ self.number(); }
-                error(self.current, "Unexpected Character.");
+                if c.is_digit(10){
+                    self.number(); 
+                }
+                else if c.is_alphabetic() {
+                    self.identifier(); 
+                }
+                else {
+                    error(self.current, "Unexpected Character.");
+                }
             }
         }
     }
 
-    fn advance(&mut self) -> &char {
+    fn advance(&mut self) -> char {
         let index = self.current;
         self.current += 1;
-       &self.source[index].expect("REASON")
+        self.source.as_bytes()[index] as char
     }
 
 
@@ -106,14 +136,22 @@ impl LoxScanner <'_> {
             });
     }
 
+    // fn addTokenLexeme(&mut self, token_type:TokenType, text: String)-> () {
+    //     self.Tokens.push(
+    //         Token{
+    //             token_type:token_type,
+    //             lexeme:text ,
+    //             literal:Object::NULL,
+    //             line:self.line
+    //         });
+    // }
+
+
+
 
     fn substring(&self, begin : usize, end : usize) -> String {
-        let subslice: &[Option<&char>] = &self.source[begin..end];
-        let result_string:String = subslice
-            .iter()
-            .filter_map(|&option_char| option_char)
-            .collect();
-        return result_string
+        let subslice: &str = &self.source[begin..end];
+        String::from(subslice)
     }
 
     fn isAtEnd(&self) -> bool {
@@ -124,9 +162,9 @@ impl LoxScanner <'_> {
         if self.isAtEnd() {
             return false;
         }
-        match self.source[self.current] {
+        match self.source.chars().nth(self.current){
             Some(c) => { 
-                if *c != expected { 
+                if c != expected { 
                     return false;
                 }
                 self.current += 1;
@@ -137,23 +175,25 @@ impl LoxScanner <'_> {
     }
 
 
-    fn peek(&self) -> &char {
+    fn peek(&self) -> char {
         if self.isAtEnd() {
-            return &'\0';
+            return '\0';
         }
-        self.source[self.current].expect("REASON")
+        // Grab the byte at that index and cast it to a char
+        self.source.as_bytes()[self.current] as char
     }
 
-    fn peek_next(&self) -> &char {
+    fn peek_next(&self) -> char {
         if self.current + 1 > self.source.len() {
-            return &'\0';
+            return '\0';
         }
-        self.source[self.current+1].expect("REASON")
+        // Grab the byte at that index and cast it to a char
+        self.source.as_bytes()[self.current + 1] as char
     }
 
 
     fn string (&mut self) ->  () {
-        while *self.peek() != '"' && !self.isAtEnd() {
+        while self.peek() != '"' && !self.isAtEnd() {
             self.current +=1;
         }
 
@@ -170,7 +210,7 @@ impl LoxScanner <'_> {
     fn number(&mut self) -> () {
         while self.peek().is_digit(10) {self.current += 1;}
 
-        if *self.peek() == '.' && self.peek_next().is_digit(10) {
+        if self.peek() == '.' && self.peek_next().is_digit(10) {
             self.current += 1;
         }
 
@@ -183,5 +223,19 @@ impl LoxScanner <'_> {
             }
             Err(_) => (),
         }
+    }
+
+    fn identifier(&mut self) -> () {
+        while self.peek().is_alphanumeric() {
+            self.advance();
+        }
+
+        let text= &self.source[self.start..self.current];
+
+        let token_type = KEYWORDS.get(text)
+            .cloned()
+            .unwrap_or(TokenType::IDENTIFIER);
+
+        self.addToken(token_type);
     }
 }
