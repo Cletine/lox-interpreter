@@ -2,7 +2,6 @@ use std::env;
 use std::error::Error;
 use std::fs;
 use std::process;
-use scanner_rust::ScannerStr;
 
 fn main() {
     let config: Config = Config::build(env::args()).unwrap_or_else(|err: &str| {
@@ -18,32 +17,16 @@ fn main() {
 
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(config.file_path)?;
-    let mut scanner = ScannerStr::new(&contents);
-    let source = get_char_list(&mut scanner);
-
-    debug_print(&source);
-
+    debug_print(&contents);
     Ok(())
 }
 
-fn get_char_list(sc: &mut ScannerStr<'_>) -> Vec<Option <char>> {
-    let mut v = Vec::new();
-        loop {
-            let ch = sc.next_char().unwrap();
-            if ch == None {
-                break;
-            }
-            v.push(ch);
-        }
-    return v
-}
-
-
-fn debug_print(source : &Vec<Option <char>>) -> () {   
-    for token in source { 
-        println!("{:?}", token); 
+fn debug_print(source : &String) -> () {    
+    for c in source.chars()  { 
+        println!("{:?}", c); 
     } 
 }
+
 struct Config {
     pub file_path: String,
 }
