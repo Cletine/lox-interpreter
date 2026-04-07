@@ -4,9 +4,11 @@ use std::error::Error;
 use std::fs;
 use std::process;
 use std::fs::File;
+use std::path::Path;
 use std::io:: {BufWriter, Write};
 use scanner_rust::ScannerStr;
 use lox_interpreter::error;
+use project_root::get_project_root;
 
 
 fn main() {
@@ -23,10 +25,17 @@ fn main() {
 
 fn generate_boilerplate(init : DefineAST) -> std::io::Result<()> {
 
+    // searches for the project root and creates a file in the specified path
+    let root = get_project_root().expect("Failed to find project root");
+    let path = root.join("src").join("lox").join("expressions.rs");
     let contents = fs::read_to_string(init.file_description_path)?;
-    let file = File::create("expressions.rs")?;
+    let file = File::create(path)?;
     let mut writer = BufWriter::new(file);
 
+    let _ = writeln!(writer, "use crate::lox::Token;" );
+    let _ = writeln!(writer, "use crate::lox::Object;" );
+    let _ = writeln!(writer, "");
+    let _ = writeln!(writer, "");
     let _ = writeln!(writer, "pub enum Expr {{" );
 
     for line in contents.lines()  {
@@ -63,7 +72,6 @@ fn generate_boilerplate(init : DefineAST) -> std::io::Result<()> {
 
 struct DefineAST {
     pub file_description_path: String,
-    pub file_destination_path: String,
 }
 
 impl DefineAST {
@@ -74,14 +82,8 @@ impl DefineAST {
             None => return Err("Did not get a file description path"), 
         };
 
-        let file_destination_path: String = match args.next() {
-            Some(arg) => arg,
-            None => return Err("Did not get a file expression path")
-        };
-
         Ok(DefineAST{
             file_description_path: file_description_path, 
-            file_destination_path: file_destination_path 
         })
     }
 }
