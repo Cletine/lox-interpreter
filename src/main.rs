@@ -39,8 +39,7 @@ impl Config {
                 None => return Err("Did not get a file path"), 
             };
 
-        Ok(Config{file_path:file_path})
-    }
+        Ok(Config{file_path:file_path}) }
 }
 
 

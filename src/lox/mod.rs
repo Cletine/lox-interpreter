@@ -1,7 +1,9 @@
 mod object;
 mod scanner;
 mod token;
+mod expressions;
 
+pub use self::expressions::Expr;
 pub use self::object::Object;
 pub use self::scanner::LoxScanner;
 pub use self::token::{Token, TokenType};
@@ -142,7 +144,10 @@ mod tests {
             start: 0,
             current: 0,
             line: 1,
+ 
         };
+
+
         scanner.scanTokens();
         assert_eq!(scanner.Tokens.pop(), Some(Token { token_type: TokenType::EOF, lexeme: "".to_string(), literal: Object::NULL, line: 1 }));  
         assert_eq!(scanner.Tokens.pop(), Some(Token { token_type: TokenType::NUMBER, lexeme: "2819238471321".to_string(), literal: Object::NUMBER(2819238471321.0), line: 1 }));  

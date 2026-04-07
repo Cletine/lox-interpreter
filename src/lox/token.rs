@@ -1,4 +1,4 @@
-use crate::lox_scanner::Object;
+use crate::lox::Object;
 
 #[derive (Debug, PartialEq, Clone)]
 pub enum TokenType {

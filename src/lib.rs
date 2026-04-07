@@ -1,4 +1,4 @@
-pub mod lox_scanner;
+pub mod lox;
 use std::process;
 
 
