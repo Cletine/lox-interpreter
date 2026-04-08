@@ -1,13 +1,9 @@
 // This file should generate AST boiler plate  
 use std::env;
-use std::error::Error;
 use std::fs;
 use std::process;
 use std::fs::File;
-use std::path::Path;
 use std::io:: {BufWriter, Write};
-use scanner_rust::ScannerStr;
-use lox_interpreter::error;
 use project_root::get_project_root;
 
 
