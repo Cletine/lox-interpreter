@@ -31,7 +31,7 @@ pub struct Token {
 }
 
 impl Token { 
-    pub fn toString(&self) -> &'static str{
+    pub fn to_string(&self) -> &'static str{
         "{self.type} {self.lexeme} {self.literal}"
     } 
 }

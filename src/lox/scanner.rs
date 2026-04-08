@@ -31,7 +31,7 @@ lazy_static! {
 
 pub struct LoxScanner {
     pub source:String, 
-    pub Tokens: Vec<Token>,
+    pub tokens: Vec<Token>,
     pub start: usize,
     pub current: usize,
     pub line: usize,
@@ -39,14 +39,14 @@ pub struct LoxScanner {
 
 
 impl LoxScanner { 
-    pub fn scanTokens(&mut self) {
-        while !(self.isAtEnd()) {
+    pub fn scan_tokens(&mut self) {
+        while !(self.is_at_end()) {
             self.start = self.current;
-            self.scanToken();
+            self.scan_token();
         }   
 
-        self.Tokens.push(
-            Token {
+        self.tokens.push(
+            Token{
                 token_type:TokenType::EOF,
                 lexeme: "".to_string(),
                 literal: Object::NULL,
@@ -55,42 +55,42 @@ impl LoxScanner {
 
     }
 
-    fn scanToken(&mut self) -> () {
+    fn scan_token(&mut self) -> () {
         let c : char = self.advance();
-        match c { '(' => self.addToken(TokenType::LeftParen),
-            ')' => self.addToken(TokenType::RightParen),
-            '{' => self.addToken(TokenType::LeftBrace),
-            '}' => self.addToken(TokenType::RightBrace),
-            ',' => self.addToken(TokenType::Comma),
-            '.' => self.addToken(TokenType::Dot),
-            '-' => self.addToken(TokenType::Minus),
-            '+' => self.addToken(TokenType::Plus),
-            ';' => self.addToken(TokenType::SemiColon),
-            '*' => self.addToken(TokenType::Star),
+        match c { '(' => self.add_token(TokenType::LeftParen),
+            ')' => self.add_token(TokenType::RightParen),
+            '{' => self.add_token(TokenType::LeftBrace),
+            '}' => self.add_token(TokenType::RightBrace),
+            ',' => self.add_token(TokenType::Comma),
+            '.' => self.add_token(TokenType::Dot),
+            '-' => self.add_token(TokenType::Minus),
+            '+' => self.add_token(TokenType::Plus),
+            ';' => self.add_token(TokenType::SemiColon),
+            '*' => self.add_token(TokenType::Star),
             '!' => {
                 let operator = if self.match_next('=') {TokenType::BangEqual} else {TokenType::Bang};
-                self.addToken(operator)
+                self.add_token(operator)
             }
             '=' => {
                 let operator = if self.match_next('=') {TokenType::EqualEqual} else {TokenType::Equal};
-                self.addToken(operator)
+                self.add_token(operator)
             }
             '>' => {
                 let operator = if self.match_next('=') {TokenType::GreaterEqual} else {TokenType::Greater};
-                self.addToken(operator) 
+                self.add_token(operator) 
             }
             '<' => {
                 let operator = if self.match_next('=') {TokenType::LessEqual} else {TokenType::Less};
-                self.addToken(operator)
+                self.add_token(operator)
             }
             '/' => { 
                 if self.match_next('/') {
-                    while self.peek() != '\n' && !self.isAtEnd() {
+                    while self.peek() != '\n' && !self.is_at_end() {
                         self.advance();
                     }
                 }
                 else {
-                    self.addToken(TokenType::Slash);
+                    self.add_token(TokenType::Slash);
 
                 }
             }
@@ -120,14 +120,14 @@ impl LoxScanner {
     }
 
 
-    fn addToken(&mut self, token_type : TokenType) -> () {
-        self.addTokenLiteral(token_type, Object::NULL);
+    fn add_token(&mut self, token_type : TokenType) -> () {
+        self.add_token_literal(token_type, Object::NULL);
     }
 
 
-    fn addTokenLiteral(&mut self, token_type:TokenType, literal: Object)-> () {
+    fn add_token_literal(&mut self, token_type:TokenType, literal: Object)-> () {
         let text : String = self.substring(self.start, self.current);
-        self.Tokens.push(
+        self.tokens.push(
             Token{
                 token_type:token_type,
                 lexeme: text,
@@ -136,9 +136,9 @@ impl LoxScanner {
             });
     }
 
-    // fn addTokenLexeme(&mut self, token_type:TokenType, text: String)-> () {
-    //     self.Tokens.push(
-    //         Token{
+    // fn add_tokenLexeme(&mut self, token_type:TokenType, text: String)-> () {
+    //     self.tokens.push(
+    //         token{
     //             token_type:token_type,
     //             lexeme:text ,
     //             literal:Object::NULL,
@@ -154,12 +154,12 @@ impl LoxScanner {
         String::from(subslice)
     }
 
-    fn isAtEnd(&self) -> bool {
+    fn is_at_end(&self) -> bool {
         self.current >= self.source.len() 
     }
 
     fn match_next(&mut self, expected: char) -> bool {
-        if self.isAtEnd() {
+        if self.is_at_end() {
             return false;
         }
         match self.source.chars().nth(self.current){
@@ -176,7 +176,7 @@ impl LoxScanner {
 
 
     fn peek(&self) -> char {
-        if self.isAtEnd() {
+        if self.is_at_end() {
             return '\0';
         }
         // Grab the byte at that index and cast it to a char
@@ -193,18 +193,18 @@ impl LoxScanner {
 
 
     fn string (&mut self) ->  () {
-        while self.peek() != '"' && !self.isAtEnd() {
+        while self.peek() != '"' && !self.is_at_end() {
             self.current +=1;
         }
 
-        if self.isAtEnd() {
+        if self.is_at_end() {
             error(self.line, "Unterminated String");
         }
 
         self.current += 1;
         let return_str : String = self.substring(self.start + 1, self.current - 1);
-        //addTokenLiteral expects a literal of type Object
-        self.addTokenLiteral(TokenType::STRING, Object::STRING(return_str));
+        //add_tokenLiteral expects a literal of type Object
+        self.add_token_literal(TokenType::STRING, Object::STRING(return_str));
     }
 
     fn number(&mut self) -> () {
@@ -216,10 +216,10 @@ impl LoxScanner {
 
         while self.peek().is_digit(10) {self.current += 1;}
 
-        //addTokenLiteral expects a literal of type Object
+        //add_tokenLiteral expects a literal of type Object
         match self.substring(self.start, self.current).parse::<f64>() {
             Ok(num) => {
-                self.addTokenLiteral(TokenType::NUMBER,Object::NUMBER(num));
+                self.add_token_literal(TokenType::NUMBER,Object::NUMBER(num));
             }
             Err(_) => (),
         }
@@ -236,6 +236,6 @@ impl LoxScanner {
             .cloned()
             .unwrap_or(TokenType::IDENTIFIER);
 
-        self.addToken(token_type);
+        self.add_token(token_type);
     }
 }
