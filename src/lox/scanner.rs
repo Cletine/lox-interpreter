@@ -136,17 +136,6 @@ impl LoxScanner {
             });
     }
 
-    // fn add_tokenLexeme(&mut self, token_type:TokenType, text: String)-> () {
-    //     self.tokens.push(
-    //         token{
-    //             token_type:token_type,
-    //             lexeme:text ,
-    //             literal:Object::NULL,
-    //             line:self.line
-    //         });
-    // }
-
-
 
 
     fn substring(&self, begin : usize, end : usize) -> String {
