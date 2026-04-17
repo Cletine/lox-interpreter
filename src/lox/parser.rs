@@ -1,21 +1,28 @@
 use crate::lox::Token;
 use crate::lox::TokenType;
 use crate::lox::Object;
-use crate::error;
-
+use crate::lox::Expr;
+use crate::parse_error;
 
 pub struct LoxParser {
     pub tokens: Vec<Token>,
     pub current: usize,
 }
 
+
+// TODO Implement a Result<Expr, ParseError> return for the parse
+// This may prove to be essential for its function and testablity
 impl LoxParser {
 
-    fn expression(&self) -> Expr {
+    fn parse(&mut self) {
+        self.expression();
+    }
+
+    fn expression(&mut self) -> Expr {
         self.equality() 
     }
 
-    fn equality(&self) -> Expr {
+    fn equality(&mut self) -> Expr {
         let mut left_expr : Expr = self.comparision();
         loop {
             match self.tokens[self.current].token_type  {
@@ -24,9 +31,9 @@ impl LoxParser {
                     self.current += 1;
                     let right_expr = self.comparision();
 
-                    let left_expr = Expr::Binary{
+                    left_expr = Expr::Binary{
                         left: Box::new(left_expr),
-                        op: operator, 
+                        operator: operator, 
                         right: Box::new(right_expr),
                     };
                 }
@@ -38,7 +45,7 @@ impl LoxParser {
         left_expr 
     }
 
-    fn comparision(&self) {
+    fn comparision(&mut self) -> Expr {
         let mut left_term : Expr  = self.term();
         loop {
             match self.tokens[self.current].token_type  {
@@ -47,9 +54,9 @@ impl LoxParser {
                     self.current += 1;
                     let right_term = self.term();
 
-                    let left_term = Expr::Binary{
+                    left_term = Expr::Binary{
                         left: Box::new(left_term),
-                        op: operator, 
+                        operator: operator, 
                         right: Box::new(right_term),
                     };
                 }
@@ -62,7 +69,7 @@ impl LoxParser {
 
 
 
-    fn term(&self) {
+    fn term(&mut self) -> Expr {
         let mut left_factor : Expr = self.factor();
         loop {
             match self.tokens[self.current].token_type  {
@@ -71,9 +78,9 @@ impl LoxParser {
                     self.current += 1;
                     let right_factor = self.factor();
 
-                    let left_factor = Expr::Binary{
+                    left_factor = Expr::Binary{
                         left: Box::new(left_factor),
-                        op: operator, 
+                        operator: operator, 
                         right: Box::new(right_factor),
                     };
                 }
@@ -84,7 +91,7 @@ impl LoxParser {
         left_factor
     }
 
-    fn factor(&self) {
+    fn factor(&mut self) -> Expr {
         let mut left_unary: Expr = self.unary();
         loop {
             match self.tokens[self.current].token_type  {
@@ -93,9 +100,9 @@ impl LoxParser {
                     self.current += 1;
                     let right_unary = self.unary();
 
-                    let left_unary = Expr::Binary{
+                    left_unary = Expr::Binary{
                         left: Box::new(left_unary),
-                        op: operator, 
+                        operator: operator, 
                         right: Box::new(right_unary),
                     };
                 }
@@ -107,7 +114,7 @@ impl LoxParser {
         left_unary
     }
 
-    fn unary(&self) {
+    fn unary(&mut self) -> Expr {
         match  self.tokens[self.current].token_type {
             TokenType::Bang | TokenType::Minus => {
                 let operator = self.tokens[self.current].clone();
@@ -115,8 +122,8 @@ impl LoxParser {
                 let unary = self.unary();
 
                 Expr::Unary {
-                    op: operator,
-                    right: Box::new(unary);
+                    operator: operator, 
+                    right: Box::new(unary),
                 }
 
             }
@@ -126,16 +133,16 @@ impl LoxParser {
 
     }
 
-    fn primary(&self) {
+    fn primary(&mut self) -> Expr {
         match self.tokens[self.current].token_type {
             TokenType::NUMBER => {
                 Expr::Literal {
-                    value: Object::NUMBER(self.tokens[self.current].literal),
+                    value: self.tokens[self.current].literal,
                 }
             }
             TokenType::STRING => {
                 Expr::Literal {
-                    value: Object::STRING(self.tokens[self.current].literal),
+                    value: self.tokens[self.current].literal,
                 }
             }
             TokenType::FALSE => {
@@ -159,25 +166,27 @@ impl LoxParser {
                 match self.tokens[self.current].token_type {
                     TokenType::RightParen => {
                         Expr::Grouping {
-                            expression: expr,
+                            expression: Box::new(expr),
                         }
 
                     }
 
-                    _ => parse_error(self.tokens[self.current], "Expect ')' after expression "),
+                    _ => parse_error(self.tokens[self.current], "Expect ')' after expression."),
                 }
             }
+
+            _ => parse_error(self.tokens[self.current], "Expect expression."),
 
         }
     }
 
-    fn syncronize(&self) -> () {
+    fn syncronize(&mut self) -> () {
         // move off the current error throwing token
         self.current += 1;
 
-        while !is_at_end() {
+        while !self.is_at_end() {
             // checks if previous token was a statement terminator ';'
-            if (self.tokens[self.current - 1].token_type == TokenType::SemiColon) {
+            if self.tokens[self.current - 1].token_type == TokenType::SemiColon {
                 break
             }
             match self.tokens[self.current].token_type {
@@ -189,13 +198,13 @@ impl LoxParser {
                     TokenType::PRINT |
                     TokenType::RETURN |
                     TokenType::VAR => break,
+                    _ => self.current += 1,
             }
-            self.current += 1;
         }
     }
 
     fn is_at_end(&self) -> bool {
-        self.current >= self.source.len() 
+        self.current >= self.tokens.len() 
     }
 
 
