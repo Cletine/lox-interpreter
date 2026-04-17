@@ -32,6 +32,7 @@ fn generate_boilerplate(init : DefineAST) -> std::io::Result<()> {
     let _ = writeln!(writer, "use crate::lox::Object;" );
     let _ = writeln!(writer, "");
     let _ = writeln!(writer, "");
+    let _ = writeln!(writer, "#[derive (Debug, PartialEq, Clone)]");
     let _ = writeln!(writer, "pub enum Expr {{" );
 
     for line in contents.lines()  {
