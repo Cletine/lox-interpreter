@@ -2,6 +2,7 @@ use crate::lox::Token;
 use crate::lox::Object;
 
 
+#[derive (Debug, PartialEq, Clone)]
 pub enum Expr {
 	Binary {
     left: Box<Expr>,
