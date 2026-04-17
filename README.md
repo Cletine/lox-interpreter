@@ -101,7 +101,7 @@ This interpreter is actively being developed. Upcoming milestones include:
 ### Build
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/lox-interpreter.git
+git clone https://github.com/Cletine/lox-interpreter.git
 cd lox-interpreter
 cargo build --release
 ```
