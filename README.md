@@ -1,7 +1,6 @@
 # 🦀 Lox Interpreter — Rust
 
 > A fully-featured interpreter for the **Lox** programming language, built from scratch in Rust.
-> The following project is developed by hand with AI assistance from Claude Sonnet 4.6.
 > Inspired by Robert Nystrom's [*Crafting Interpreters*](https://craftinginterpreters.com/).
 
 [![Rust](https://img.shields.io/badge/Rust-1.78%2B-orange?logo=rust)](https://www.rust-lang.org/)
@@ -161,6 +160,7 @@ Following Nystrom's approach, the tree-walk interpreter provides a clean mental 
 - 🦀 [The Rust Programming Language](https://doc.rust-lang.org/book/)
 - 🔬 [Rust Reference](https://doc.rust-lang.org/reference/)
 
+> The following project is developed by hand with AI assistance from Claude Sonnet 4.6.
 ---
 
 ## 📄 License
