@@ -4,6 +4,16 @@ use crate::lox::Object;
 use crate::lox::Expr;
 use crate::parse_error;
 
+
+
+// idea should be to handle error propagation when inside 
+// recursive descent parser
+struct ParserError {
+    error_msg: &str,
+    error_token: Token,
+}
+
+
 pub struct LoxParser {
     pub tokens: Vec<Token>,
     pub current: usize,
@@ -14,12 +24,15 @@ pub struct LoxParser {
 // This may prove to be essential for its function and testablity
 impl LoxParser {
 
+        // TODO Assume additional functionality for the outputs of this function.
     fn parse(&mut self) {
         self.expression();
     }
 
-    fn expression(&mut self) -> Expr {
-        self.equality() 
+    // This function should parse through the entire expression and 
+    // branch according to whether it is a sound expression or not 
+    fn expression(&mut self) -> Result<Expr, ParserError)> {
+        self.equality()?
     }
 
     fn equality(&mut self) -> Expr {
@@ -161,6 +174,7 @@ impl LoxParser {
                 }
             }
             TokenType::LeftParen => {
+                self.current += 1;
                 let expr = self.expression();
                 self.current += 1;
                 match self.tokens[self.current].token_type {
@@ -168,18 +182,22 @@ impl LoxParser {
                         Expr::Grouping {
                             expression: Box::new(expr),
                         }
-
                     }
 
-                    _ => parse_error(self.tokens[self.current], "Expect ')' after expression."),
+                    _ => {
+                        parse_error(self.tokens[self.current], "Expect ')' after expression.");
+                        //TODO some syncronizing effort or panic to evaluate the entire ast 
+                    }
                 }
             }
-
-            _ => parse_error(self.tokens[self.current], "Expect expression."),
-
+            _ => {  
+                parse_error(self.tokens[self.current], "Expect expression.");
+                 //TODO some syncronizing effort or panic to evaluate the entire ast 
+            }
         }
     }
 
+    fn 
     fn syncronize(&mut self) -> () {
         // move off the current error throwing token
         self.current += 1;
@@ -198,7 +216,7 @@ impl LoxParser {
                     TokenType::PRINT |
                     TokenType::RETURN |
                     TokenType::VAR => break,
-                    _ => self.current += 1,
+                _ => self.current += 1,
             }
         }
     }
