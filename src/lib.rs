@@ -3,6 +3,14 @@ use std::process;
 use crate::lox::Token;
 use crate::lox::TokenType;
 
+
+struct ParserError<'a> {
+    error_msg: &'a str,
+    error_token: Token,
+}
+
+
+
 pub fn error (line:usize, message: &str) {
     report(line, "", message);
     process::exit(1)
