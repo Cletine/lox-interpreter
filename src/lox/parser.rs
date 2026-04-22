@@ -14,7 +14,7 @@ use crate::ParserError;
 
 pub struct LoxParser {
     pub tokens: Vec<Token>,
-    pub current: usize,
+    pub current_index: usize,
 }
 
 
@@ -25,48 +25,45 @@ pub struct LoxParser {
 impl LoxParser {
 
         // TODO Assume additional functionality for the outputs of this function.
-    fn parse(&mut self) -> Result<Expr, ParserError> {
-        Self::expression(&mut self.tokens, &mut self.current)
+    fn parse(&mut self) -> () {
+        Self::expression(&self.tokens, self.current_index);
     }
 
     // This function should parse through the entire expression and 
     // branch according to whether it is a sound expression or not 
-    fn expression <'a> (tokens: &'a mut Vec<Token>, current: &'a mut usize) -> (Result<Expr, ParserError<'a>>, usize) {
-        Self::equality(tokens, current)
+    fn expression <'a> (tokens: &'a Vec<Token>, current_index: usize) -> (Result<Expr, ParserError<'a>>, usize) {
+        Self::equality(tokens, current_index)
     }
 
     // TODO Needs some sort of accumulator to collect the current count of recursive expressions (*)
-    fn equality <'a> (tokens: &'a mut Vec<Token>, current: &'a mut usize) -> (Result<Expr, ParserError<'a>>, usize) {
+    fn equality <'a> (tokens: &'a Vec<Token>, current: usize) -> (Result<Expr, ParserError<'a>>, usize) {
         let mut parse_error_status: Option<_> = None;
         // Determine left sided soundness of the left side of the exression
-        let left_expr : Result<Expr, ParserError> = 
-            match Self::comparision(tokens, current) {
-                Ok(mut left_expr) => Ok(left_expr),
-                // return left sided parsing error 
-                Err(parse_error) => Err(parse_error),
-            };
+        let (left_expr, mut nx_index) : (Result<Expr, ParserError<'a>>, usize) = Self::comparision(tokens, current);
 
         match left_expr {
-            Ok(left_expr) => {
+            Ok(mut left_expr) => {
                 loop {
-                    match tokens[*current].token_type  {
+                    match tokens[nx_index].token_type  {
                         TokenType::BangEqual | TokenType::EqualEqual => {
-                            let operator = tokens[*current].clone();
-                            *current += 1;
-
+                            let operator = tokens[nx_index].clone();
+                            nx_index += 1;
                             // Determine right sided soundness of the right side of the expression
-                            match Self::comparision(tokens, current) {
-                                // If both left and right are sound, return the expression
-                                Ok(right_expr) => {
+                            match Self::comparision(tokens, nx_index) {
+                                // If both left and right are sound, update the index and add to the
+                                // expression stack
+                                (Ok(right_expr), nx) => {
+                                    nx_index = nx;
                                     left_expr = Expr::Binary{
                                         left: Box::new(left_expr),
                                         operator: operator, 
                                         right: Box::new(right_expr),
-                                    }
+                                    };
                                 }
 
                                 // else return right sided parsing error
-                                Err(parse_error) => { 
+                                (Err(parse_error), nx) => { 
+                                    nx_index = nx;
                                     parse_error_status = Some(parse_error);
                                     break
                                 },
@@ -77,32 +74,35 @@ impl LoxParser {
                 }
                 //Determines if any errors propagated back.
                 match parse_error_status {
-                    Some (parse_error) => Err(parse_error),
-                    None => Ok(left_expr)
+                    Some (parse_error) => (Err(parse_error), nx_index) ,
+                    None => (Ok(left_expr), nx_index),
                 }
             }
-            Err(parse_error) => Err(parse_error),
+            // else return left sided parsing error 
+            Err(parse_error) => (Err(parse_error), nx_index),
         }
 
     }
 
 
-    fn comparision <'a> (tokens: &'a mut Vec<Token>, current: &'a mut usize) -> Result<Expr, ParserError<'a>> {      
+    fn comparision <'a> (tokens: &'a Vec<Token>, current: usize) -> (Result<Expr, ParserError<'a>>, usize) {      
+        let mut parse_error_status: Option<_> = None;
         // Determine left sided soundness of the left side of the exression
-        let left_term: Result<Expr, ParserError> =
-            match Self::term(tokens, current) {
-                Ok(left_term) => {
-                    let mut parse_error_status: Option<_> = None;
+        let (left_term, mut nx_index) : (Result<Expr, ParserError>, usize) = Self::term(tokens, current);
+
+            match left_term {
+                Ok(mut left_term) => {
                     // Iterate through contiguous instances of the Toketype
                     loop {
-                        match tokens[*current].token_type  {
+                        match tokens[nx_index].token_type  {
                             TokenType::Greater | TokenType::Less | TokenType::GreaterEqual | TokenType::LessEqual => {
-                                let operator = tokens[*current].clone();
-                                *current += 1;
+                                let operator = tokens[nx_index].clone();
+                                nx_index += 1;
                                 // Determine right sided soundness of the right side of the expression
-                                match Self::term(tokens, current) {
+                                match Self::term(tokens, nx_index) {
                                     // If both left and right are sound, return the expression
-                                    Ok(right_term) => {
+                                    (Ok(right_term), nx) => {
+                                        nx_index = nx;
                                         left_term = Expr::Binary{
                                             left: Box::new(left_term),
                                             operator: operator, 
@@ -110,7 +110,8 @@ impl LoxParser {
                                         }
                                     }
                                     // else return right sided parsing error
-                                    Err(parse_error) =>  { 
+                                    (Err(parse_error), nx) =>  { 
+                                        nx_index = nx;
                                         parse_error_status = Some(parse_error);
                                         break
                                     }
@@ -121,45 +122,43 @@ impl LoxParser {
                     }
                     //Determines if right descent propagated any errors back.
                     match parse_error_status {
-                        Some(parse_error) => Err(parse_error),
-                        None => Ok(left_term)
+                        Some(parse_error) => (Err(parse_error), nx_index),
+                        None => (Ok(left_term), nx_index),
                     }
                 }
                 // return left sided parsing error 
-                Err(parse_error) => Err(parse_error),
-            };
-
-        return left_term
+                Err(parse_error) => (Err(parse_error), nx_index)
+            }
     }
 
 
 
-    fn term <'a> (tokens: &'a mut Vec<Token>, current: &'a mut usize) -> Result<Expr, ParserError<'a>> {       
+    fn term <'a> (tokens: &'a Vec<Token>, current: usize) -> (Result<Expr, ParserError<'a>>, usize) {
+        let mut parse_error_status: Option<_> = None;
         // Determine left sided soundness of the left side of the exression
-        let mut left_factor: Result<Expr, ParserError> = 
-            match Self::factor(tokens, current) {
-                Ok(left_factor) => {
+        let (left_factor, mut nx_index) : (Result<Expr, ParserError>, usize)  = Self::factor(tokens, current);
 
-                    let mut parse_error_status: Option<_> = None;
+        match left_factor {
+                Ok(mut left_factor) => {
                     // Iterate through contiguous instances of the Toketype
                     loop {
-                        match tokens[*current].token_type  {
+                        match tokens[nx_index].token_type  {
                             TokenType::Minus | TokenType::Plus => {
-                                let operator = tokens[*current].clone();
-                                *current += 1;
+                                let operator = tokens[nx_index].clone();
+                                nx_index += 1;
 
-                                // Determine right sided soundness of the right side of the expression
-                                match Self::factor(tokens, current) {
-                                    // If both left and right are sound, return the expression
-                                    Ok(right_factor) => {
+                                match Self::factor(tokens, nx_index) {
+                                    (Ok(right_factor), nx) => {
+                                        nx_index = nx;
                                         left_factor = Expr::Binary{
                                             left: Box::new(left_factor),
                                             operator: operator, 
                                             right: Box::new(right_factor),
                                         };
                                     }
-                                    // else return right sided parsing error
-                                    Err(parse_error) => { 
+                                    // return right sided parsing error
+                                    (Err(parse_error), nx) => { 
+                                        nx_index = nx;
                                         parse_error_status = Some(parse_error);
                                         break
                                     }
@@ -170,35 +169,34 @@ impl LoxParser {
                     }
                     //Determines if right descent propagated any errors back.
                     match parse_error_status {
-                        Some(parse_error) => Err(parse_error),
-                        None => Ok(left_factor)
+                        Some(parse_error) => (Err(parse_error), nx_index),
+                        None => (Ok(left_factor), nx_index),
                     }            
                 }
                 // return left sided parsing error 
-                Err(parse_error) => Err(parse_error),
-            };
-
-        return left_factor
+                Err(parse_error) => (Err(parse_error), nx_index)
+            }
     }
 
 
-    fn factor<'a> (tokens: &'a mut Vec<Token>, current: &'a mut usize) -> Result<Expr, ParserError<'a>> {
+    fn factor<'a> (tokens: &'a Vec<Token>, current: usize) -> (Result<Expr, ParserError<'a>>, usize) {
+        let mut parse_error_status: Option<_> = None;
         // Determine left sided soundness of the left side of the exression
-        let mut left_unary: Result<Expr, ParserError> = match Self::unary(tokens, current) {
-            Ok(left_unary) => {
-
-                let mut parse_error_status: Option<_> = None;
+        let (left_unary, mut nx_index) : (Result<Expr, ParserError>, usize) = Self::unary(tokens, current);
+        match left_unary {
+            Ok(mut left_unary) => {
                 // Iterate through contiguous instances of the Toketype
                 loop {
-                    match tokens[*current].token_type  {
+                    match tokens[nx_index].token_type  {
                         TokenType::Slash | TokenType::Star => {
-                            let operator = tokens[*current].clone();
-                            *current += 1;
+                            let operator = tokens[nx_index].clone();
+                            nx_index += 1;
 
                             // Determine right sided soundness of the right side of the expression
-                            match Self::unary(tokens, current) {
+                            match Self::unary(tokens, nx_index) {
                                 // If both left and right are sound, return the expression
-                                Ok(right_unary) => {
+                                (Ok(right_unary), nx) => {
+                                    nx_index = nx;
                                     left_unary= Expr::Binary{
                                         left: Box::new(left_unary),
                                         operator: operator, 
@@ -206,7 +204,8 @@ impl LoxParser {
                                     };
                                 }
                                 // else return right sided parsing error
-                                Err(parse_error) => { 
+                                (Err(parse_error), nx) => { 
+                                    nx_index = nx;
                                     parse_error_status = Some(parse_error);
                                     break
                                 }
@@ -217,35 +216,33 @@ impl LoxParser {
                 }
                 //Determines if right descent propagated any errors back.
                 match parse_error_status {
-                    Some(parse_error) => Err(parse_error),
-                    None => Ok(left_unary)
+                    Some(parse_error) => (Err(parse_error), nx_index),
+                    None => (Ok(left_unary), nx_index),
                 }           
             }
             // return left sided parsing error 
-            Err(parse_error) => Err(parse_error),
-        };
-
-        return left_unary
+            Err(parse_error) => (Err(parse_error), nx_index)
+        }
     }
 
 
-    fn unary <'a> (tokens: &'a mut Vec<Token>, current: &'a mut usize) -> Result<Expr, ParserError<'a>> {
-        let unary: Result<Expr, ParserError> = 
-            match tokens[*current].token_type  {
+    fn unary <'a> (tokens: &'a Vec<Token>, mut current: usize) -> (Result<Expr, ParserError<'a>>, usize) {
+        let unary: (Result<Expr, ParserError>, usize) = 
+            match tokens[current].token_type  {
             TokenType::Slash | TokenType::Star => {
-                let operator = tokens[*current].clone();
-                *current += 1;
+                let operator = tokens[current].clone();
+                current += 1;
 
                 match Self::unary(tokens, current) {
                     // If the expression is sound, return the expression
-                    Ok(unary) => {
-                        Ok(Expr::Unary {
+                    (Ok(unary), cur_index)  => {
+                        (Ok(Expr::Unary {
                             operator: operator, 
                             right: Box::new(unary),
-                        })     
+                        }), cur_index)    
                     }
                     // else return right sided parsing error
-                    Err(parse_error) => Err(parse_error),
+                    (Err(parse_error), cur_index)  => (Err(parse_error), cur_index)
                 }
             }
             _ => Self::primary(tokens, current),
@@ -255,63 +252,68 @@ impl LoxParser {
     }
 
 
-    fn primary<'a> (tokens: &'a mut Vec<Token>, current: &'a mut usize) -> Result<Expr, ParserError<'a>> {
-        let primary: Result<Expr, ParserError> = 
-            match tokens[*current].token_type {
-            TokenType::NUMBER => {
-                Ok(Expr::Literal {
-                    value: tokens[*current].literal,
-                })
-            }
-            TokenType::STRING => {
-                Ok(Expr::Literal {
-                    value: tokens[*current].literal,
-                })
-            }
-            TokenType::FALSE => {
-                Ok(Expr::Literal {
-                    value: Object::BOOL(false),
-                })
-            }
-            TokenType::TRUE => {
-                Ok(Expr::Literal {
-                    value: Object::BOOL(true),
-                })
-            }
-            TokenType::NIL => {
-                Ok(Expr::Literal {
-                    value: Object::NULL
-                })
-            }
-            TokenType::LeftParen => {
-                *current += 1;
-                let expr : Result<Expr, ParserError> = 
-                    match Self::expression(tokens, current) {
-                    Ok(expr) => {
-                        *current += 1;
-                        match tokens[*current].token_type {
-                            TokenType::RightParen => {
-                                Ok(Expr::Grouping {
-                                    expression: Box::new(expr),
-                                })
-                            }
-                            _ => {
-                                //parse_error(self.tokens[self.current], "Expect ')' after expression.");
-                                //TODO some syncronizing effort or panic to evaluate the entire ast 
-                                Err(ParserError {error_msg: "Expect ')' after expression.", error_token: tokens[*current] })
+    fn primary<'a> (tokens: &'a Vec<Token>, mut current: usize) -> (Result<Expr, ParserError<'a>>, usize) {
+        let primary: (Result<Expr, ParserError>, usize) = 
+            match tokens[current].token_type {
+                TokenType::NUMBER => {
+                    (Ok(Expr::Literal {
+                        value: tokens[current].literal.clone(),
+                    }), current)
+                }
+                TokenType::STRING => {
+                    (Ok(Expr::Literal {
+                        value: tokens[current].literal.clone(),
+                    }), current)
+
+                }
+                TokenType::FALSE => {
+                    (Ok(Expr::Literal {
+                        value: Object::BOOL(false),
+                    }), current)
+
+                }
+                TokenType::TRUE => {
+                    (Ok(Expr::Literal {
+                        value: Object::BOOL(true),
+                    }), current)
+
+                }
+                TokenType::NIL => {
+                    (Ok(Expr::Literal {
+                        value: Object::NULL
+                    }), current)
+
+                }
+                TokenType::LeftParen => {
+                    current += 1;
+
+                    let (expr, mut nx_index) : (Result<Expr, ParserError>, usize) = Self::expression(tokens, current);
+
+                    match expr {
+                        Ok(expr) => {
+                            nx_index += 1;
+                            match tokens[nx_index].token_type {
+                                TokenType::RightParen => {
+                                    (Ok(Expr::Grouping {
+                                        expression: Box::new(expr),
+                                    }), nx_index)
+                                }
+                                _ => {
+                                    //parse_error(self.tokens[self.current], "Expect ')' after expression.");
+                                    //TODO some syncronizing effort or panic to evaluate the entire ast 
+                                    (Err(ParserError {error_msg: "Expect ')' after expression.", error_token: tokens[nx_index].clone() }), nx_index)
+                                }
                             }
                         }
+                        Err(parse_error) => (Err(parse_error), nx_index),
                     }
-                    Err(parse_error) => Err(parse_error),
-                };
-                return expr
-            }
-            _ => {  
-                // parse_error(self.tokens[self.current], "Expect expression.");
-                //TODO some syncronizing effort or panic to evaluate the entire ast 
-                Err(ParserError {error_msg: "Expect expression", error_token: tokens[*current]})
-            }
-        };
+                }
+                _ => {  
+                    // parse_error(self.tokens[self.current], "Expect expression.");
+                    //TODO some syncronizing effort or panic to evaluate the entire ast 
+                    (Err(ParserError {error_msg: "Expect expression", error_token: tokens[current].clone()}), current)
+                }
+            };
 
         return primary
     }
@@ -319,14 +321,14 @@ impl LoxParser {
 
     fn syncronize(&mut self) -> () {
         // move off the current error throwing token
-        self.current += 1;
+        self.current_index += 1;
 
         while !self.is_at_end() {
             // checks if previous token was a statement terminator ';'
-            if self.tokens[self.current - 1].token_type == TokenType::SemiColon {
+            if self.tokens[self.current_index - 1].token_type == TokenType::SemiColon {
                 break
             }
-            match self.tokens[self.current].token_type {
+            match self.tokens[self.current_index].token_type {
                 TokenType::CLASS |
                     TokenType::FUN |
                     TokenType::FOR |
@@ -335,12 +337,12 @@ impl LoxParser {
                     TokenType::PRINT |
                     TokenType::RETURN |
                     TokenType::VAR => break,
-                _ => self.current += 1,
+                _ => self.current_index += 1,
             }
         }
     }
 
     fn is_at_end(&self) -> bool {
-        self.current >= self.tokens.len() 
+        self.current_index >= self.tokens.len() 
     }
 }
