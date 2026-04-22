@@ -37,7 +37,7 @@ pub struct LoxScanner {
     pub line: usize,
 }
 
-
+// TODO Change literal String To string slices 
 impl LoxScanner { 
     pub fn scan_tokens(&mut self) {
         while !(self.is_at_end()) {
