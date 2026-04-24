@@ -5,8 +5,6 @@
 
 [![Rust](https://img.shields.io/badge/Rust-1.78%2B-orange?logo=rust)](https://www.rust-lang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![Stage](https://img.shields.io/badge/stage-Tree--Walk%20Interpreter-yellow)]()
 
 ---
 
