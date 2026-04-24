@@ -4,8 +4,9 @@ use crate::lox::Token;
 use crate::lox::TokenType;
 
 
-struct ParserError<'a> {
-    error_msg: &'a str,
+#[derive (Debug, PartialEq)]
+struct ParserError {
+    error_msg: String,
     error_token: Token,
 }
 
@@ -16,12 +17,12 @@ pub fn error (line:usize, message: &str) {
     process::exit(1)
 }
 
-pub fn parse_error(token : Token, message: &str) {
+pub fn parse_error(token : Token, message: String) {
     if token.token_type == TokenType::EOF {
-        report(token.line, "at end", message);
+        report(token.line, "at end", &message)
     }
     else {
-        report(token.line, format!("at '{}'", token.lexeme).as_str(), message);
+        report(token.line, format!("at '{}'", token.lexeme).as_str(), &message);
     }
 }
 

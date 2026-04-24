@@ -25,21 +25,22 @@ pub struct LoxParser {
 impl LoxParser {
 
         // TODO Assume additional functionality for the outputs of this function.
-    fn parse(&mut self) -> () {
-        Self::expression(&self.tokens, self.current_index);
+    pub fn parse (&mut self) -> Result<Expr, ParserError>{
+        let (expr, _index) = Self::expression(&self.tokens, self.current_index);
+        expr
     }
 
     // This function should parse through the entire expression and 
     // branch according to whether it is a sound expression or not 
-    fn expression <'a> (tokens: &'a Vec<Token>, current_index: usize) -> (Result<Expr, ParserError<'a>>, usize) {
+    fn expression <'a> (tokens: &'a Vec<Token>, current_index: usize) -> (Result<Expr, ParserError>, usize) {
         Self::equality(tokens, current_index)
     }
 
     // TODO Needs some sort of accumulator to collect the current count of recursive expressions (*)
-    fn equality <'a> (tokens: &'a Vec<Token>, current: usize) -> (Result<Expr, ParserError<'a>>, usize) {
+    fn equality <'a> (tokens: &'a Vec<Token>, current: usize) -> (Result<Expr, ParserError>, usize) {
         let mut parse_error_status: Option<_> = None;
         // Determine left sided soundness of the left side of the exression
-        let (left_expr, mut nx_index) : (Result<Expr, ParserError<'a>>, usize) = Self::comparision(tokens, current);
+        let (left_expr, mut nx_index) : (Result<Expr, ParserError>, usize) = Self::comparision(tokens, current);
 
         match left_expr {
             Ok(mut left_expr) => {
@@ -85,7 +86,7 @@ impl LoxParser {
     }
 
 
-    fn comparision <'a> (tokens: &'a Vec<Token>, current: usize) -> (Result<Expr, ParserError<'a>>, usize) {      
+    fn comparision <'a> (tokens: &'a Vec<Token>, current: usize) -> (Result<Expr, ParserError>, usize) {      
         let mut parse_error_status: Option<_> = None;
         // Determine left sided soundness of the left side of the exression
         let (left_term, mut nx_index) : (Result<Expr, ParserError>, usize) = Self::term(tokens, current);
@@ -133,7 +134,7 @@ impl LoxParser {
 
 
 
-    fn term <'a> (tokens: &'a Vec<Token>, current: usize) -> (Result<Expr, ParserError<'a>>, usize) {
+    fn term <'a> (tokens: &'a Vec<Token>, current: usize) -> (Result<Expr, ParserError>, usize) {
         let mut parse_error_status: Option<_> = None;
         // Determine left sided soundness of the left side of the exression
         let (left_factor, mut nx_index) : (Result<Expr, ParserError>, usize)  = Self::factor(tokens, current);
@@ -179,7 +180,7 @@ impl LoxParser {
     }
 
 
-    fn factor<'a> (tokens: &'a Vec<Token>, current: usize) -> (Result<Expr, ParserError<'a>>, usize) {
+    fn factor<'a> (tokens: &'a Vec<Token>, current: usize) -> (Result<Expr, ParserError>, usize) {
         let mut parse_error_status: Option<_> = None;
         // Determine left sided soundness of the left side of the exression
         let (left_unary, mut nx_index) : (Result<Expr, ParserError>, usize) = Self::unary(tokens, current);
@@ -226,10 +227,10 @@ impl LoxParser {
     }
 
 
-    fn unary <'a> (tokens: &'a Vec<Token>, mut current: usize) -> (Result<Expr, ParserError<'a>>, usize) {
+    fn unary <'a> (tokens: &'a Vec<Token>, mut current: usize) -> (Result<Expr, ParserError>, usize) {
         let unary: (Result<Expr, ParserError>, usize) = 
             match tokens[current].token_type  {
-            TokenType::Slash | TokenType::Star => {
+            TokenType::Bang | TokenType::Minus => {
                 let operator = tokens[current].clone();
                 current += 1;
 
@@ -252,7 +253,7 @@ impl LoxParser {
     }
 
 
-    fn primary<'a> (tokens: &'a Vec<Token>, mut current: usize) -> (Result<Expr, ParserError<'a>>, usize) {
+    fn primary<'a> (tokens: &'a Vec<Token>, mut current: usize) -> (Result<Expr, ParserError>, usize) {
         let primary: (Result<Expr, ParserError>, usize) = 
             match tokens[current].token_type {
                 TokenType::NUMBER => {
@@ -301,7 +302,7 @@ impl LoxParser {
                                 _ => {
                                     //parse_error(self.tokens[self.current], "Expect ')' after expression.");
                                     //TODO some syncronizing effort or panic to evaluate the entire ast 
-                                    (Err(ParserError {error_msg: "Expect ')' after expression.", error_token: tokens[nx_index].clone() }), nx_index)
+                                    (Err(ParserError {error_msg: "Expect ')' after expression.".to_string(), error_token: tokens[nx_index].clone() }), nx_index)
                                 }
                             }
                         }
@@ -311,7 +312,7 @@ impl LoxParser {
                 _ => {  
                     // parse_error(self.tokens[self.current], "Expect expression.");
                     //TODO some syncronizing effort or panic to evaluate the entire ast 
-                    (Err(ParserError {error_msg: "Expect expression", error_token: tokens[current].clone()}), current)
+                    (Err(ParserError {error_msg: "Expect expression".to_string(), error_token: tokens[current].clone()}), current)
                 }
             };
 
