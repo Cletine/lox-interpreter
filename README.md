@@ -1,4 +1,4 @@
-# 🦀 Lox Interpreter — Rust
+#  Lox Interpreter — Rust
 
 > A fully-featured interpreter for the **Lox** programming language, built from scratch in Rust.
 > Inspired by Robert Nystrom's [*Crafting Interpreters*](https://craftinginterpreters.com/).
@@ -10,13 +10,13 @@
 
 ---
 
-## 📖 Overview
+##  Overview
 
 This project is a handcrafted implementation of the **Lox** scripting language interpreter in Rust. Lox is a dynamically-typed, object-oriented language designed by Robert Nystrom as a teaching vehicle for interpreter design. This implementation covers the full pipeline from raw source text to evaluated output — scanner, parser, AST, and interpreter — all written in idiomatic Rust.
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 Source Code (.lox)
@@ -44,7 +44,7 @@ Source Code (.lox)
 
 ---
 
-## ✅ Features Implemented
+##  Features Implemented
 
 ### Lexer / Scanner
 - Full tokenization of Lox source files
@@ -90,7 +90,7 @@ This interpreter is actively being developed. Upcoming milestones include:
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -121,7 +121,7 @@ cargo test
 
 ---
 
-## 🧪 Example Lox Code
+##  Example Lox Code
 
 ```lox
 // Variables and arithmetic
@@ -144,26 +144,25 @@ if (a < b) {
 > **Note:** Not all of the above features may be executable yet depending on the current stage of the interpreter. See the roadmap above.
 
 
-## 🔧 Design Decisions
+##  Design Decisions
 
 **Why Rust?**
 Rust's ownership model makes it exceptionally well-suited for interpreter development. Memory safety is guaranteed at compile time, and the type system enforces correctness across complex recursive data structures like ASTs — without a garbage collector.
 
 **Why Tree-Walk First?**
-Following Nystrom's approach, the tree-walk interpreter provides a clean mental model for language semantics before optimizing with a bytecode VM in Phase 2. It's the right foundation.
+Following Nystrom's approach, the tree-walk interpreter provides a clean mental model for language semantics before optimizing with a bytecode VM in Phase 2.
 
 ---
 
-## 📚 Reference
+##  Reference
 
-- 📖 [*Crafting Interpreters* by Robert Nystrom](https://craftinginterpreters.com/) — the definitive guide this project is based on
-- 🦀 [The Rust Programming Language](https://doc.rust-lang.org/book/)
-- 🔬 [Rust Reference](https://doc.rust-lang.org/reference/)
+-  [*Crafting Interpreters* by Robert Nystrom](https://craftinginterpreters.com/) — the definitive guide this project is based on
+-  [The Rust Programming Language](https://doc.rust-lang.org/book/)
+-  [Rust Reference](https://doc.rust-lang.org/reference/)
 
-> The following project is developed by hand with AI assistance from Claude Sonnet 4.6.
 ---
 
-## 📄 License
+##  License
 
 This project is licensed under the [MIT License](LICENSE).
 
