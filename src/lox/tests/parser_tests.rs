@@ -10,6 +10,8 @@ fn nil_primary() {
     assert_eq!(parser.parse(), Ok(Expr::Literal {value: Object::NULL, }));
 }
 
+
+#[test]
 fn number_primary() {
     let test_tokens = vec![Token { token_type: TokenType::NUMBER, lexeme: "1.0".to_string(), literal: Object::NUMBER(1.0), line: 1 }, Token {token_type: TokenType::EOF, lexeme: "".to_string(), literal: Object::NULL, line: 1}];
     let mut parser = LoxParser{
@@ -18,8 +20,12 @@ fn number_primary() {
 
     assert_eq!(parser.parse(), Ok(Expr::Literal {value: Object::NUMBER(1.0), }));
 }
+
+
+#[test]
 fn string_primary() {
-    let test_tokens = vec![Token { token_type: TokenType::STRING, lexeme: "String".to_string(), literal: Object::NUMBER(1.0), line: 1 }, Token {token_type: TokenType::EOF, lexeme: "".to_string(), literal: Object::NULL, line: 1}];
+    let test_tokens = vec![Token { token_type: TokenType::STRING, lexeme: "String".to_string(), literal: Object::STRING("String".to_string()), line: 1 }, 
+                           Token {token_type: TokenType::EOF, lexeme: "".to_string(), literal: Object::NULL, line: 1}];
     let mut parser = LoxParser{
         tokens: test_tokens, current_index: 0 
     };
@@ -27,6 +33,8 @@ fn string_primary() {
     assert_eq!(parser.parse(), Ok(Expr::Literal {value: Object::STRING("String".to_string()), }));
 }
 
+
+#[test]
 fn true_primary() {
     let test_tokens = vec![Token { token_type: TokenType::TRUE, lexeme: "true".to_string(), literal: Object::NULL, line: 1 }, Token {token_type: TokenType::EOF, lexeme: "".to_string(), literal: Object::NULL, line: 1}];
     let mut parser = LoxParser{
@@ -36,15 +44,17 @@ fn true_primary() {
     assert_eq!(parser.parse(), Ok(Expr::Literal {value: Object::BOOL(true), }));
 }
 
+
+#[test]
 fn false_primary() {
-    let test_tokens = vec![Token { token_type: TokenType::TRUE, lexeme: "false".to_string(), literal: Object::NULL, line: 1 }, Token {token_type: TokenType::EOF, lexeme: "".to_string(), literal: Object::NULL, line: 1}];
-    let mut parser = LoxParser{
-        tokens: test_tokens, current_index: 0 
+    let test_tokens = vec![Token { token_type: TokenType::FALSE, lexeme: "false".to_string(), literal: Object::NULL, line: 1 }, Token {token_type: TokenType::EOF, lexeme: "".to_string(), literal: Object::NULL, line: 1}]; let mut parser = LoxParser{ tokens: test_tokens, current_index: 0 
     };
 
     assert_eq!(parser.parse(), Ok(Expr::Literal {value: Object::BOOL(false), }));
 }
 
+
+#[test]
 fn expression_primary() {
     let test_tokens = vec![Token { token_type: TokenType::LeftParen, lexeme: "(".to_string(), literal: Object::NULL, line: 1 }, 
                            Token { token_type: TokenType::NUMBER, lexeme: "1.0".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
@@ -57,6 +67,8 @@ fn expression_primary() {
     assert_eq!(parser.parse(), Ok(Expr::Grouping {expression: Box::new(Expr::Literal {value: Object::NUMBER(1.0), }), }));
 }
 
+
+#[test]
 fn neg_unary () {
     let test_tokens = vec![Token { token_type: TokenType::Minus, lexeme: "-".to_string(), literal: Object::NULL, line: 1 }, 
                            Token { token_type: TokenType::NUMBER, lexeme: "1.0".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
@@ -70,6 +82,8 @@ fn neg_unary () {
 
 }
 
+
+#[test]
 fn bang_unary () {
     let test_tokens = vec![Token { token_type: TokenType::Bang, lexeme: "!".to_string(), literal: Object::NULL, line: 1 }, 
                         Token { token_type: TokenType::NUMBER, lexeme: "1.0".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
@@ -82,6 +96,8 @@ fn bang_unary () {
                                             right: Box::new(Expr::Literal {value: Object::NUMBER(1.0), }),}));
 }
 
+
+#[test]
 fn div_factor() {
     let test_tokens = vec![Token { token_type: TokenType::NUMBER, lexeme: "1".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
                            Token { token_type: TokenType::Slash, lexeme: "/".to_string(), literal: Object::NULL, line: 1 }, 
@@ -98,6 +114,8 @@ fn div_factor() {
 
 }
 
+
+#[test]
 fn mul_factor() {
     let test_tokens = vec![Token { token_type: TokenType::NUMBER, lexeme: "1".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
                            Token { token_type: TokenType::Star, lexeme: "*".to_string(), literal: Object::NULL, line: 1 }, 
@@ -113,6 +131,8 @@ fn mul_factor() {
                                             right: Box::new(Expr::Literal {value: Object::NUMBER(2.0), }),}));
 }
 
+
+#[test]
 fn add_terms() {
     let test_tokens = vec![Token { token_type: TokenType::NUMBER, lexeme: "1".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
                            Token { token_type: TokenType::Plus, lexeme: "+".to_string(), literal: Object::NULL, line: 1 }, 
@@ -128,6 +148,8 @@ fn add_terms() {
                                             right: Box::new(Expr::Literal {value: Object::NUMBER(2.0), }),}));
 }
 
+
+#[test]
 fn sub_terms() {
     let test_tokens = vec![Token { token_type: TokenType::NUMBER, lexeme: "1".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
                            Token { token_type: TokenType::Minus, lexeme: "-".to_string(), literal: Object::NULL, line: 1 }, 
@@ -143,6 +165,8 @@ fn sub_terms() {
                                             right: Box::new(Expr::Literal {value: Object::NUMBER(2.0), }),}));
 }
 
+
+#[test]
 fn factored_term() {
     let test_tokens = vec![Token { token_type: TokenType::Minus, lexeme: "-".to_string(), literal: Object::NULL, line: 1 },
                            Token { token_type: TokenType::NUMBER, lexeme: "1".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
@@ -160,6 +184,8 @@ fn factored_term() {
                                             right: Box::new(Expr::Literal {value: Object::NUMBER(2.0), }),}));
 }
 
+
+#[test]
 fn unary_after_term() {
     let test_tokens = vec![Token { token_type: TokenType::Minus, lexeme: "-".to_string(), literal: Object::NULL, line: 1 },
                            Token { token_type: TokenType::NUMBER, lexeme: "1".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
@@ -179,6 +205,8 @@ fn unary_after_term() {
                                                               right: Box::new(Expr::Literal {value: Object::NUMBER(2.0), }),}),}));
 }
 
+
+#[test]
 fn less_than_comp() {
     let test_tokens = vec![Token { token_type: TokenType::NUMBER, lexeme: "1".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
                            Token { token_type: TokenType::Less, lexeme: "<".to_string(), literal: Object::NULL, line: 1 }, 
@@ -194,6 +222,8 @@ fn less_than_comp() {
                                             right:  Box::new(Expr::Literal {value: Object::NUMBER(2.0), }),}),);
 }
 
+
+#[test]
 fn less_than_eq_comp() {
     let test_tokens = vec![Token { token_type: TokenType::NUMBER, lexeme: "1".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
                            Token { token_type: TokenType::LessEqual, lexeme: "<=".to_string(), literal: Object::NULL, line: 1 }, 
@@ -209,6 +239,8 @@ fn less_than_eq_comp() {
                                             right:  Box::new(Expr::Literal {value: Object::NUMBER(2.0), }),}),);
 }
 
+
+#[test]
 fn greater_than_comp() {
     let test_tokens = vec![Token { token_type: TokenType::NUMBER, lexeme: "1".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
                            Token { token_type: TokenType::Greater, lexeme: ">".to_string(), literal: Object::NULL, line: 1 }, 
@@ -224,6 +256,8 @@ fn greater_than_comp() {
                                             right:  Box::new(Expr::Literal {value: Object::NUMBER(2.0), }),}),);
 }
 
+
+#[test]
 fn greater_than_eq_comp() {
     let test_tokens = vec![Token { token_type: TokenType::NUMBER, lexeme: "1".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
                            Token { token_type: TokenType::GreaterEqual, lexeme: ">=".to_string(), literal: Object::NULL, line: 1 }, 
@@ -239,6 +273,7 @@ fn greater_than_eq_comp() {
                                             right:  Box::new(Expr::Literal {value: Object::NUMBER(2.0), }),}),);
 }
 
+#[test]
 fn equal_comp() {
     let test_tokens = vec![Token { token_type: TokenType::NUMBER, lexeme: "1".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
                            Token { token_type: TokenType::EqualEqual, lexeme: "==".to_string(), literal: Object::NULL, line: 1 }, 
@@ -254,6 +289,7 @@ fn equal_comp() {
                                             right:  Box::new(Expr::Literal {value: Object::NUMBER(2.0), }),}),);
 }
 
+#[test]
 fn not_equal_comp() {
     let test_tokens = vec![Token { token_type: TokenType::NUMBER, lexeme: "1".to_string(), literal: Object::NUMBER(1.0), line: 1 }, 
                            Token { token_type: TokenType::BangEqual, lexeme: "!=".to_string(), literal: Object::NULL, line: 1 }, 
