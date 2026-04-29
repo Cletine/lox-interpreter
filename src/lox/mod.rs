@@ -1,8 +1,8 @@
 mod object;
-mod scanner;
+pub mod scanner;
 mod token;
 mod expressions;
-mod parser;
+pub mod parser;
 
 pub use self::expressions::Expr;
 pub use self::object::Object;
