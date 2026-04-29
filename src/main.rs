@@ -2,6 +2,10 @@ use std::env;
 use std::error::Error;
 use std::fs;
 use std::process;
+use lox_interpreter::lox::LoxScanner;
+use lox_interpreter::lox::LoxParser;
+use lox_interpreter::ast_printer::print_ast;
+
 
 fn main() {
     let config: Config = Config::build(env::args()).unwrap_or_else(|err: &str| {
@@ -17,7 +21,26 @@ fn main() {
 
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(config.file_path)?;
-    debug_print(&contents);
+    //debug_print(&contents);
+    let mut scanner = LoxScanner{
+        source: contents, 
+        tokens: Vec::new(),
+        start: 0,
+        current: 0,
+        line: 1,
+    };
+    scanner.scan_tokens();
+
+    let mut parser = LoxParser{
+        tokens: scanner.tokens, current_index: 0 
+    };
+
+    let result_expr = parser.parse();
+    match result_expr {
+        Ok(expr) => print_ast(&expr),
+        _ => (),
+    };
+
     Ok(())
 }
 
