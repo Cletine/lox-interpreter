@@ -7,9 +7,9 @@ use crate::ParserError;
 
 
 
-// idea should be to handle error propagation when inside 
-// recursive descent parser
-//
+// The following parser represents a left-sided recursive descent parser
+// The parser moves through the list of tokens and generates an AST 
+// If any error occurs, the parser should propagate the error back up to the parse function
 
 
 pub struct LoxParser {
@@ -18,13 +18,12 @@ pub struct LoxParser {
 }
 
 
-// Initially we will have it return the first instance of an error  and as we add expression
-// evaluation, we will syncronize the parser to break from error and continue to parse through the
-// errored function.
-// TODO Implement Syncornize to the parser
 impl LoxParser {
 
-        // TODO Assume additional functionality for the outputs of this function.
+        // Initially we will have it return the first instance of an error  and as we add expression
+        // evaluation, we will syncronize the parser to break from error and continue to parse through the
+        // errored function.
+        // TODO Assume additional functionality for the outputs of this function. i.e syncronize()
     pub fn parse (&mut self) -> Result<Expr, ParserError>{
         let (expr, _index) = Self::expression(&self.tokens, self.current_index);
         expr
@@ -36,7 +35,6 @@ impl LoxParser {
         Self::equality(tokens, current_index)
     }
 
-    // TODO Needs some sort of accumulator to collect the current count of recursive expressions (*)
     fn equality <'a> (tokens: &'a Vec<Token>, current: usize) -> (Result<Expr, ParserError>, usize) {
         let mut parse_error_status: Option<_> = None;
         // Determine left sided soundness of the left side of the exression
@@ -44,7 +42,7 @@ impl LoxParser {
 
         match left_expr {
             Ok(mut left_expr) => {
-                loop {
+                while nx_index < tokens.len(){
                     match tokens[nx_index].token_type  {
                         TokenType::BangEqual | TokenType::EqualEqual => {
                             let operator = tokens[nx_index].clone();
@@ -94,7 +92,7 @@ impl LoxParser {
             match left_term {
                 Ok(mut left_term) => {
                     // Iterate through contiguous instances of the Toketype
-                    loop {
+                    while nx_index < tokens.len() {
                         match tokens[nx_index].token_type  {
                             TokenType::Greater | TokenType::Less | TokenType::GreaterEqual | TokenType::LessEqual => {
                                 let operator = tokens[nx_index].clone();
@@ -127,7 +125,7 @@ impl LoxParser {
                         None => (Ok(left_term), nx_index),
                     }
                 }
-                // return left sided parsing error 
+                // return left sided parsing propagated error 
                 Err(parse_error) => (Err(parse_error), nx_index)
             }
     }
@@ -142,7 +140,7 @@ impl LoxParser {
         match left_factor {
                 Ok(mut left_factor) => {
                     // Iterate through contiguous instances of the Toketype
-                    loop {
+                    while nx_index < tokens.len() {
                         match tokens[nx_index].token_type  {
                             TokenType::Minus | TokenType::Plus => {
                                 let operator = tokens[nx_index].clone();
@@ -187,7 +185,7 @@ impl LoxParser {
         match left_unary {
             Ok(mut left_unary) => {
                 // Iterate through contiguous instances of the Toketype
-                loop {
+                while nx_index < tokens.len(){
                     match tokens[nx_index].token_type  {
                         TokenType::Slash | TokenType::Star => {
                             let operator = tokens[nx_index].clone();
@@ -259,30 +257,30 @@ impl LoxParser {
                 TokenType::NUMBER => {
                     (Ok(Expr::Literal {
                         value: tokens[current].literal.clone(),
-                    }), current)
+                    }), current + 1)
                 }
                 TokenType::STRING => {
                     (Ok(Expr::Literal {
                         value: tokens[current].literal.clone(),
-                    }), current)
+                    }), current + 1)
 
                 }
                 TokenType::FALSE => {
                     (Ok(Expr::Literal {
                         value: Object::BOOL(false),
-                    }), current)
+                    }), current + 1)
 
                 }
                 TokenType::TRUE => {
                     (Ok(Expr::Literal {
                         value: Object::BOOL(true),
-                    }), current)
+                    }), current + 1)
 
                 }
                 TokenType::NIL => {
                     (Ok(Expr::Literal {
                         value: Object::NULL
-                    }), current)
+                    }), current + 1 )
 
                 }
                 TokenType::LeftParen => {
@@ -292,12 +290,11 @@ impl LoxParser {
 
                     match expr {
                         Ok(expr) => {
-                            nx_index += 1;
                             match tokens[nx_index].token_type {
                                 TokenType::RightParen => {
                                     (Ok(Expr::Grouping {
                                         expression: Box::new(expr),
-                                    }), nx_index)
+                                    }), nx_index + 1)
                                 }
                                 _ => {
                                     //parse_error(self.tokens[self.current], "Expect ')' after expression.");
@@ -312,7 +309,7 @@ impl LoxParser {
                 _ => {  
                     // parse_error(self.tokens[self.current], "Expect expression.");
                     //TODO some syncronizing effort or panic to evaluate the entire ast 
-                    (Err(ParserError {error_msg: "Expect expression".to_string(), error_token: tokens[current].clone()}), current)
+                    (Err(ParserError {error_msg: "Expect expression".to_string(), error_token: tokens[current].clone()}), current + 1)
                 }
             };
 
