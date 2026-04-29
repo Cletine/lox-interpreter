@@ -3,7 +3,7 @@ use crate::lox::TokenType;
 use crate::lox::Object;
 use std::collections::HashMap;
 use lazy_static::lazy_static;
-use crate::error;
+use crate::scan_error;
 
 
 lazy_static! {
@@ -32,8 +32,8 @@ lazy_static! {
 pub struct LoxScanner {
     pub source:String, 
     pub tokens: Vec<Token>,
-    pub start: usize,
-    pub current: usize,
+    pub start: usize,                           //byte-offset(utf-8)
+    pub current: usize,                         //byte-offset(utf-8)
     pub line: usize,
 }
 
@@ -107,16 +107,19 @@ impl LoxScanner {
                     self.identifier(); 
                 }
                 else {
-                    error(self.current, "Unexpected Character.");
+                    scan_error(self.line, c.to_string(), "Unexpected Character.");
                 }
             }
         }
     }
 
     fn advance(&mut self) -> char {
-        let index = self.current;
-        self.current += 1;
-        self.source.as_bytes()[index] as char
+        let ch = self.source[self.current..]
+            .chars()
+            .next()
+            .expect("advance called at end of source");
+        self.current += ch.len_utf8(); // step by actual byte length of this char
+        ch    
     }
 
 
@@ -151,12 +154,15 @@ impl LoxScanner {
         if self.is_at_end() {
             return false;
         }
-        match self.source.chars().nth(self.current){
+        let ch = self.source[self.current..]
+            .chars()
+            .next();
+        match ch {
             Some(c) => { 
                 if c != expected { 
                     return false;
                 }
-                self.current += 1;
+                self.advance();
                 return true
             }
             None => return false
@@ -165,19 +171,16 @@ impl LoxScanner {
 
 
     fn peek(&self) -> char {
-        if self.is_at_end() {
-            return '\0';
-        }
-        // Grab the byte at that index and cast it to a char
-        self.source.as_bytes()[self.current] as char
+        self.source[self.current..]
+            .chars()
+            .next()
+            .unwrap_or('\0')
     }
 
     fn peek_next(&self) -> char {
-        if self.current + 1 > self.source.len() {
-            return '\0';
-        }
-        // Grab the byte at that index and cast it to a char
-        self.source.as_bytes()[self.current + 1] as char
+        let mut chars = self.source[self.current..].chars();
+        chars.next(); // skip current
+        chars.next().unwrap_or('\0')
     }
 
 
@@ -187,7 +190,7 @@ impl LoxScanner {
         }
 
         if self.is_at_end() {
-            error(self.line, "Unterminated String");
+            scan_error(self.line, self.substring(self.start, self.current), "Unterminated String");
         }
 
         self.current += 1;
@@ -197,13 +200,13 @@ impl LoxScanner {
     }
 
     fn number(&mut self) -> () {
-        while self.peek().is_digit(10) {self.current += 1;}
+        while self.peek().is_digit(10) {self.advance();}
 
         if self.peek() == '.' && self.peek_next().is_digit(10) {
             self.current += 1;
         }
 
-        while self.peek().is_digit(10) {self.current += 1;}
+        while self.peek().is_digit(10) {self.advance();}
 
         //add_tokenLiteral expects a literal of type Object
         match self.substring(self.start, self.current).parse::<f64>() {
